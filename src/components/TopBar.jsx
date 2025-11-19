@@ -1,7 +1,16 @@
 import { useLocation, useParams } from "react-router-dom";
 import { projectsList } from "../data/projects";
+import { useEffect, useState } from "react";
 
 export default function TopBar() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 600);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const location = useLocation();
   const params = useParams();
 
@@ -32,15 +41,15 @@ export default function TopBar() {
   };
 
   const logo = {
-    width: "90px",
-    height: "45px",
+    width: isMobile ? "70px" : "90px",
+    height: isMobile ? "35px" : "45px",
   };
 
   const title = {
     position: "absolute",
     left: "50%",
     transform: "translateX(-50%)",
-    fontSize: "20px",
+    fontSize: isMobile ? "16px" : "20px",
     margin: 0,
     whiteSpace: "nowrap",
     fontWight: "300",

@@ -1,6 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const Certificats = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 600);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [lightbox, setLightbox] = useState({ open: false, imgSrc: "" });
 
   const certificatsData = [
@@ -25,7 +33,7 @@ const Certificats = () => {
       display: "flex",
       flexDirection: "column",
       gap: "20px",
-      padding: "20px",
+      padding: isMobile ? "5px" : "20px",
     },
     row: {
       display: "flex",

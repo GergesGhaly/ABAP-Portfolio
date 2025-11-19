@@ -1,7 +1,15 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import html2pdf from "html2pdf.js";
 
 export default function CV({ data }) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 600);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const { name, title, experience, projects, contact } = data;
   const cvRef = useRef();
 
@@ -13,7 +21,7 @@ export default function CV({ data }) {
       alignItems: "start",
       justifyContent: "start",
 
-      padding: "2rem",
+      padding: isMobile ? "" : "2rem",
       // backgroundColor: "#f9fafb",
       fontFamily: "sans-serif",
       lineHeight: "1.4",
@@ -53,8 +61,8 @@ export default function CV({ data }) {
     },
     footer: {
       position: "absolute",
-      bottom: "1.5rem",
-      right: "4rem",
+      bottom: isMobile ? "0.1rem" : "1.5rem",
+      right: isMobile ? "1rem" : "4rem",
       display: "flex",
       justifyContent: "flex-end",
       // textAlign: "center",

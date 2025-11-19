@@ -1,0 +1,135 @@
+REPORT ZGG_ALV_VIEWER.
+
+" Include ALV definitions
+INCLUDE ZGG_ALV_VIEWER_DEF.
+
+PERFORM GET_DATA.
+
+" Display ALV
+PERFORM DISPLAY_DATA.
+
+"-------------------------------------------------------------
+" Form GET_DATA: Fetch vendor or PO data
+"-------------------------------------------------------------
+FORM GET_DATA.
+
+  " Check input validation
+  IF vendor IS INITIAL AND po_num IS INITIAL.
+    MESSAGE 'Please enter at least Vendor or PO Number' TYPE 'E'.
+  ENDIF.
+
+  IF vendor IS NOT INITIAL AND po_num IS NOT INITIAL.
+    MESSAGE 'Please enter only one field at a time' TYPE 'E'.
+  ENDIF.
+
+  " Fetch data by vendor
+  IF vendor IS NOT INITIAL.
+    SELECT ekko~ebeln,
+           ekko~lifnr,
+           lfa1~name1
+      FROM ekko
+      INNER JOIN lfa1 ON ekko~lifnr = lfa1~lifnr
+      INTO TABLE @lt_header
+      WHERE ekko~lifnr IN @vendor.
+  ENDIF.
+
+  " Fetch data by PO number
+  IF po_num IS NOT INITIAL.
+    SELECT ekko~ebeln,
+           ekko~lifnr,
+           lfa1~name1
+      FROM ekko
+      INNER JOIN lfa1 ON ekko~lifnr = lfa1~lifnr
+      INTO TABLE @lt_header
+      WHERE ekko~ebeln IN @po_num.
+  ENDIF.
+
+ENDFORM.
+
+"-------------------------------------------------------------
+" Form TOP_OF_PAGE: Header and commentary
+"-------------------------------------------------------------
+FORM TOP_OF_PAGE .
+
+   CLEAR lt_comment.
+
+  " Display ALV commentary header
+  CLEAR ls_comment.
+  ls_comment-typ  = 'H'.                " Header line
+  ls_comment-info = 'ZGG_ALV_VIEWER'.   " Report title
+  APPEND ls_comment TO lt_comment.
+
+  CLEAR ls_comment.
+  ls_comment-typ  = 'S'.                " Subheader
+  ls_comment-info = 'Display ALV grid showing count of purchasing'.
+  APPEND ls_comment TO lt_comment.
+
+  " Write commentary to ALV
+  CALL FUNCTION 'REUSE_ALV_COMMENTARY_WRITE'
+    EXPORTING
+      i_logo             = 'ENJOYSAP_LOGO'
+      it_list_commentary = lt_comment.
+
+ENDFORM.
+
+
+"-------------------------------------------------------------
+" Form DISPLAY_DATA: Display ALV grid
+"-------------------------------------------------------------
+FORM DISPLAY_DATA.
+
+  " Build field catalog
+  CLEAR wa_fieldcat.
+  wa_fieldcat-fieldname = 'EBELN'.
+  wa_fieldcat-seltext_m = 'PO Number'.
+  APPEND wa_fieldcat TO it_fieldcat.
+
+  CLEAR wa_fieldcat.
+  wa_fieldcat-fieldname = 'LIFNR'.
+  wa_fieldcat-seltext_m = 'Vendor Number'.
+  APPEND wa_fieldcat TO it_fieldcat.
+
+  CLEAR wa_fieldcat.
+  wa_fieldcat-fieldname = 'NAME1'.
+  wa_fieldcat-seltext_m = 'Vendor Name'.
+  APPEND wa_fieldcat TO it_fieldcat.
+
+  CLEAR wa_fieldcat.
+  wa_fieldcat-fieldname = 'PO_COUNT'.
+  wa_fieldcat-seltext_m = 'Item Count'.
+  APPEND wa_fieldcat TO it_fieldcat.
+
+  CLEAR wa_fieldcat.
+  wa_fieldcat-fieldname = 'TOTAL_QTY'.
+  wa_fieldcat-seltext_m = 'Total Quantity'.
+  wa_fieldcat-do_sum = 'X'.              " Sum column
+  APPEND wa_fieldcat TO it_fieldcat.
+
+  " Add editable checkbox column for selection
+  CLEAR wa_fieldcat.
+  wa_fieldcat-fieldname = 'CHKBOX'.
+  wa_fieldcat-seltext_m = 'Select'.
+  wa_fieldcat-checkbox = 'X'.
+  wa_fieldcat-edit = 'X'.               " Allow editing
+  APPEND wa_fieldcat TO it_fieldcat.
+
+  " Display ALV grid with toolbar and user command
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+    EXPORTING
+      i_callback_program      = sy-repid
+      it_fieldcat             = it_fieldcat
+      i_callback_top_of_page  = 'TOP_OF_PAGE'
+
+
+*     i_callback_pf_status_set = 'PF_STATUS'  " Uncomment if using custom GUI status
+    TABLES
+      t_outtab = lt_header
+    EXCEPTIONS
+      program_error = 1
+      OTHERS        = 2.
+
+  IF sy-subrc <> 0.
+    MESSAGE 'There is an error displaying ALV' TYPE 'I'.
+  ENDIF.
+
+ENDFORM.

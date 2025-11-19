@@ -1,0 +1,29 @@
+*&---------------------------------------------------------------------*
+*& Include          ZGG_ALV_VIEWER_DEF
+*&---------------------------------------------------------------------*
+TABLES:LFA1,EKKO.
+
+SELECT-OPTIONS: Vendor     FOR LFA1-LIFNR,
+                PO_Num FOR EKKO-EBELN.
+
+
+TYPES: BEGIN OF ty_header,
+         ebeln       TYPE ekko-ebeln,
+         lifnr       TYPE ekko-lifnr,
+         name1       TYPE lfa1-name1,
+         po_count    TYPE i,
+         total_qty   TYPE ekpo-menge,
+         chkbox     TYPE c LENGTH 1,
+
+       END OF ty_header.
+
+DATA: lt_header TYPE TABLE OF ty_header.
+
+DATA: lt_comment TYPE slis_t_listheader,
+      ls_comment TYPE slis_listheader,
+      it_fieldcat TYPE slis_t_fieldcat_alv,
+      wa_fieldcat TYPE slis_fieldcat_alv.
+
+
+DATA: go_alv TYPE REF TO cl_gui_alv_grid,
+      gs_variant TYPE disvariant.

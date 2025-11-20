@@ -61,7 +61,7 @@ const Certificats = () => {
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      zIndex: 999,
+      zIndex: 9999,
     },
     lightboxImage: {
       maxWidth: "90%",

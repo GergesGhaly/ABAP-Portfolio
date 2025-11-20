@@ -24,7 +24,7 @@ export default function MainLayout() {
   const outlit = {
     width: "100%",
     // minHeight: "100vh",
-    overflowX: "hidden",
+    // overflowX: "hidden",
     overflowY: "auto",
     backgroundColor: "#f9fafb",
   };

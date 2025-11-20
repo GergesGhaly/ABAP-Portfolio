@@ -1,4 +1,14 @@
+import { useState, useEffect } from "react";
+
 export default function Home() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 600);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const styles = {
     homePage: {
       display: "flex",
@@ -11,7 +21,7 @@ export default function Home() {
       // zIndex: "99",
     },
     homeLogo: {
-      // maxWidth: "400px",
+      maxWidth: isMobile ? "400px" : "",
       // margin: "60px auto",
     },
   };

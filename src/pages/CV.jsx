@@ -160,7 +160,7 @@ export default function CV({ data }) {
             <div style={style.title}>{title}</div>
           </div> */}
         <button style={style.button} onClick={downloadPDF}>
-          Download PDF
+          Download 
         </button>
       </div>
     </section>

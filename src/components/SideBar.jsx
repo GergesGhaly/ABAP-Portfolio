@@ -7,7 +7,7 @@ export default function SideBar() {
   const [openProjects, setOpenProjects] = useState(false);
   const [openProjectFiles, setOpenProjectFiles] = useState({});
   const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 600); // تظهر افتراضي للشاشات الكبيرة
 
   const toggleProjectFiles = (id) => {
     setOpenProjectFiles((prev) => ({

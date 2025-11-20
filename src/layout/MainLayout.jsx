@@ -18,13 +18,10 @@ export default function MainLayout() {
     gap: "10px ",
     padding: isMobile ? "10px 12px" : "20px 25px",
     height: "calc(100vh - 100px)",
-    overflow: "hidden",
   };
 
   const outlit = {
     width: "100%",
-    // minHeight: "100vh",
-    // overflowX: "hidden",
     overflowY: "auto",
     backgroundColor: "#f9fafb",
   };

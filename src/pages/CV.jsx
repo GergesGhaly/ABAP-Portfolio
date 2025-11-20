@@ -20,19 +20,13 @@ export default function CV({ data }) {
       width: "100%",
       alignItems: "start",
       justifyContent: "start",
-
       padding: isMobile ? "" : "2rem",
-      // backgroundColor: "#f9fafb",
       fontFamily: "sans-serif",
       lineHeight: "1.4",
     },
     container: {
-      // maxWidth: "800px",
-      // margin: "0 auto",
       backgroundColor: "#fff",
-      // borderRadius: "12px",
-      padding: "2rem",
-      // boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+      padding: isMobile ? "1rem" : "2rem",
     },
     header: {
       display: "flex",
@@ -61,7 +55,7 @@ export default function CV({ data }) {
     },
     footer: {
       position: "absolute",
-      bottom: isMobile ? "0.1rem" : "1.5rem",
+      bottom: isMobile ? "1rem" : "1.5rem",
       right: isMobile ? "1rem" : "4rem",
       display: "flex",
       justifyContent: "flex-end",
@@ -160,7 +154,7 @@ export default function CV({ data }) {
             <div style={style.title}>{title}</div>
           </div> */}
         <button style={style.button} onClick={downloadPDF}>
-          Download 
+          Download
         </button>
       </div>
     </section>

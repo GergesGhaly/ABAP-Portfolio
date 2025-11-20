@@ -17,7 +17,7 @@ export default function Home() {
       // padding: "20px",
       width: "100%",
       height: "calc(100vh - 150px)",
-      overFlow: "hidden",
+      overflow: "hidden",
       // zIndex: "99",
     },
     homeLogo: {

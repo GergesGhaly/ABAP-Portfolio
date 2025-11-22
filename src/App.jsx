@@ -9,7 +9,6 @@ import Certificats from "./pages/Certificats";
 
 export default function App() {
   
-
   return (
     <Routes>
       {/* Main layout */}

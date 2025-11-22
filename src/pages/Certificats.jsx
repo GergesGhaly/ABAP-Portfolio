@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { certificatsData } from "../data/userInfo";
 
 const Certificats = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
@@ -10,23 +11,6 @@ const Certificats = () => {
   }, []);
 
   const [lightbox, setLightbox] = useState({ open: false, imgSrc: "" });
-
-  const certificatsData = [
-    {
-      id: 1,
-      title: "Basic Programming",
-      description: "Certification for Java fundamentals",
-      date: "2025-11-19",
-      img: "https://i.etsystatic.com/11323145/r/il/7f7042/1489349106/il_fullxfull.1489349106_o3z1.jpg",
-    },
-    {
-      id: 2,
-      title: "ABAP Fundamentals",
-      description: "Certification for advanced concepts",
-      date: "2025-10-05",
-      img: "https://m.media-amazon.com/images/I/71tiay51vhL._AC_UF894,1000_QL80_.jpg",
-    },
-  ];
 
   const sstyle = {
     container: {

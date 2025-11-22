@@ -3,8 +3,11 @@ import { AiOutlineFacebook } from "react-icons/ai";
 import { CiLinkedin } from "react-icons/ci";
 import { FaGithub } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
+import { links } from "../data/userInfo";
 
 export default function BottomBar() {
+
+
   const navigate = useNavigate(); // ⭐ استخدمها بدل window.location
 
   const [options, setOptions] = useState([
@@ -13,25 +16,6 @@ export default function BottomBar() {
     { label: "zcert", value: "/certificats" },
   ]);
 
-  const iconStyle = { color: "#354a5f", fontSize: "18px" };
-
-  const [links, setLinks] = useState([
-    {
-      name: "facebook",
-      link: "https://www.facebook.com/gerges.ghaly.35",
-      icon: <AiOutlineFacebook style={iconStyle} />,
-    },
-    {
-      name: "linkedin",
-      link: "https://www.linkedin.com/in/gerges-ghaly-9455b3224/",
-      icon: <CiLinkedin style={iconStyle} />,
-    },
-    {
-      name: "github",
-      link: "https://github.com/GergesGhaly?tab=repositories",
-      icon: <FaGithub style={iconStyle} />,
-    },
-  ]);
 
   const style = {
     display: "flex",

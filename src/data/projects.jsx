@@ -11,4 +11,13 @@ export const projectsList = [
       { id: "file2", name: "ZGG_ALV_VIEWER_DEF", content: file2Content },
     ],
   },
+  // {
+  //   id: "project2",
+  //   name: "",
+  //   icon: "📘",
+  //   files: [
+  //     { id: "file1", name: "", content:  },
+  //     { id: "file2", name: "", content:  },
+  //   ],
+  // },
 ];

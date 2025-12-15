@@ -1,29 +1,63 @@
 *&---------------------------------------------------------------------*
 *& Include          ZGG_ALV_VIEWER_DEF
 *&---------------------------------------------------------------------*
-TABLES:LFA1,EKKO.
+TABLES: LFA1, EKKO, EKPO. " Declare SAP tables used
 
-SELECT-OPTIONS: Vendor     FOR LFA1-LIFNR,
-                PO_Num FOR EKKO-EBELN.
+TYPE-POOLS: slis. " Include SLIS type pool for ALV functions
 
+"------------------------------
+" Select options for user input
+"------------------------------
+SELECT-OPTIONS: Vendor     FOR LFA1-LIFNR,  " Vendor selection
+                PO_Num FOR EKKO-EBELN,   " Purchase Order selection
+                Po_date  FOR sy-datum.   " Date selection
 
+"------------------------------
+" Header structure definition
+"------------------------------
 TYPES: BEGIN OF ty_header,
-         ebeln       TYPE ekko-ebeln,
-         lifnr       TYPE ekko-lifnr,
-         name1       TYPE lfa1-name1,
-         po_count    TYPE i,
-         total_qty   TYPE ekpo-menge,
-         chkbox     TYPE c LENGTH 1,
-
+         ebeln       TYPE ekko-ebeln,         " PO Number
+         lifnr       TYPE ekko-lifnr,         " Vendor Number
+         name1       TYPE lfa1-name1,         " Vendor Name
+         po_items_count   TYPE i,             " Count of PO items
+         total_items_qty   TYPE ekpo-menge,   " Total quantity of items
+         chkbox     TYPE c LENGTH 1,         " Checkbox for selection
+         comment        TYPE string,          " Comment field
+         color_tab      TYPE slis_t_specialcol_alv, " Color info for ALV cell
        END OF ty_header.
 
+" Main internal table for header ALV
 DATA: lt_header TYPE TABLE OF ty_header.
 
-DATA: lt_comment TYPE slis_t_listheader,
-      ls_comment TYPE slis_listheader,
-      it_fieldcat TYPE slis_t_fieldcat_alv,
-      wa_fieldcat TYPE slis_fieldcat_alv.
+" Variables for ALV commentary and field catalog
+DATA: lt_comment TYPE slis_t_listheader,  " Table for ALV header comments
+      ls_comment TYPE slis_listheader,    " Single comment structure
+      it_fieldcat TYPE slis_t_fieldcat_alv,  " Field catalog table for ALV
+      wa_fieldcat TYPE slis_fieldcat_alv,    " Work area for field catalog
+      it_items_fieldcat TYPE slis_t_fieldcat_alv, " Field catalog for items ALV
+      wa_items_fieldcat TYPE slis_fieldcat_alv.   " Work area for items field catalog
 
+"------------------------------
+" Item structure definition
+"------------------------------
+TYPES: BEGIN OF ty_po_item,
+         ebeln TYPE ekpo-ebeln,    " PO Number
+         ebelp TYPE ekpo-ebelp,    " Item Number
+         matnr TYPE ekpo-matnr,    " Material Number
+         maktx TYPE makt-maktx,    " Material Description (EN)
+         menge TYPE ekpo-menge,    " Quantity
+       END OF ty_po_item.
 
-DATA: go_alv TYPE REF TO cl_gui_alv_grid,
-      gs_variant TYPE disvariant.
+" Internal table for PO items
+DATA: lt_po_items TYPE TABLE OF ty_po_item,
+      ls_po_item TYPE ty_po_item.
+
+"------------------------------
+" Variables for ALV layout and cell coloring
+"------------------------------
+DATA: ls_color TYPE slis_specialcol_alv, " Structure for individual cell color
+      ls_layout TYPE slis_layout_alv.    " Layout settings for ALV grid
+
+" Configure layout: specify field holding color info
+ls_layout-coltab_fieldname  = 'COLOR_TAB'.    " Field that contains ALV color info
+ls_layout-colwidth_optimize = 'X'.            " Auto-optimize column width

@@ -1,0 +1,193 @@
+Technical Documentation
+Program: ZGG_ALV_VIEWER
+1. Overview
+
+ZGG_ALV_VIEWER هو برنامج ABAP Report يعتمد على ALV Grid لعرض وتحليل أوامر الشراء (Purchase Orders) مع إمكانية:
+
+التصفية حسب Vendor / PO Number / Date
+
+عرض ملخص الأوامر
+
+الانتقال إلى تفاصيل البنود
+
+تحديد أوامر مختارة وحفظها في جدول مخصص
+
+2. Program Type
+
+Type: Executable Report
+
+Technology: Classical ALV (REUSE_ALV_GRID_DISPLAY)
+
+Language: ABAP
+
+3. Selection Screen Logic
+Inputs:
+
+Vendor (LIFNR) – Multiple selection
+
+PO Number (EBELN) – Multiple selection
+
+PO Date (BEDAT) – Date range
+
+Default Values:
+
+يتم تلقائيًا تحديد الشهر السابق بالكامل كقيمة افتراضية للتاريخ.
+
+Validation:
+
+يجب إدخال Vendor أو PO Number على الأقل.
+
+في حالة عدم الإدخال → تظهر رسالة خطأ.
+
+4. Data Sources
+Standard Tables:
+
+EKKO – PO Header
+
+EKPO – PO Items
+
+LFA1 – Vendor Master
+
+MAKT – Material Description
+
+Custom Table:
+
+ZGG_SELECTED_PO
+يستخدم لتخزين أوامر الشراء التي تم اختيارها من ALV.
+
+5. Main Functionalities
+5.1 Header ALV Display
+
+يعرض البرنامج ALV يحتوي على الأعمدة التالية:
+
+Field	Description
+EBELN	Purchase Order Number
+LIFNR	Vendor Number
+NAME1	Vendor Name
+PO_ITEMS_COUNT	Number of Items
+TOTAL_ITEMS_QTY	Total Quantity
+CHKBOX	Selection Checkbox
+COMMENT	User Comment
+5.2 Conditional Coloring
+
+يتم تلوين عمود TOTAL_ITEMS_QTY بناءً على الكمية:
+
+Quantity Range	Color
+0 – 1000	Red
+1001 – 10000	Yellow
+> 10000	Green
+
+يتم تطبيق الألوان باستخدام SLIS_SPECIALCOL_ALV.
+
+5.3 Interactive Navigation (Hotspot)
+
+عمود PO Number (EBELN) يعمل كـ Hotspot.
+
+عند الضغط عليه:
+
+يتم عرض ALV آخر يحتوي على تفاصيل البنود (Items).
+
+5.4 Item Details ALV
+
+يعرض تفاصيل بنود أمر الشراء:
+
+Field	Description
+EBELN	PO Number
+EBELP	Item Number
+MATNR	Material Number
+MAKTX	Material Description
+MENGE	Quantity
+6. Save Functionality
+User Action:
+
+تحديد صف أو أكثر باستخدام Checkbox
+
+الضغط على زر SAVE
+
+Process:
+
+يتم حفظ البيانات في جدول ZGG_SELECTED_PO
+
+يتم التحقق من:
+
+وجود صفوف محددة
+
+عدم تكرار PO Number
+
+Saved Fields:
+
+PO Number
+
+Vendor
+
+Item Count
+
+Total Quantity
+
+Comment
+
+User
+
+Date & Time
+
+Messages:
+
+No rows selected
+
+PO already exists
+
+Save successful
+
+7. Events & Callbacks
+Event	Description
+TOP_OF_PAGE	عرض عنوان وLogo
+USER_COMMAND	التعامل مع Hotspot وSave
+&IC1	Double Click على PO
+&DATA_SAVE	حفظ البيانات المختارة
+8. Modularization
+
+البرنامج منظم باستخدام FORM routines مثل:
+
+GET_DATA
+
+DISPLAY_DATA
+
+COLORIZE_QUANTITY
+
+GET_ITEM_DATA
+
+DISPLAY_ITEM_DATA
+
+SAVE_SELECTED_ROWS
+
+9. Error Handling
+
+Validation Messages
+
+ALV display error handling
+
+Database insert/update handling باستخدام SY-SUBRC
+
+10. Performance Considerations
+
+استخدام:
+
+GROUP BY
+
+Aggregation (COUNT, SUM)
+
+Select واحد للـ Header
+
+Select منفصل للـ Items عند الطلب
+
+11. Conclusion
+
+برنامج ZGG_ALV_VIEWER يوفر:
+
+واجهة تفاعلية لعرض أوامر الشراء
+
+تحليل سريع للكميات
+
+حفظ انتقائي للبيانات
+
+تصميم قابل للتوسعة مستقبلًا

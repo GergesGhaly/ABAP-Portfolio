@@ -1,70 +1,125 @@
-REPORT ZGG_ALV_VIEWER.
+REPORT zgg_alv_viewer.
 
 " Include ALV definitions
-INCLUDE ZGG_ALV_VIEWER_DEF.
+INCLUDE zgg_alv_viewer_def.
 
-PERFORM GET_DATA.
+INITIALIZATION.
+  DATA: lv_first_prev TYPE sy-datum,
+        lv_last_prev  TYPE sy-datum.
 
-" Display ALV
-PERFORM DISPLAY_DATA.
+  " Set default date range to previous month
+  lv_first_prev = sy-datum.
+  lv_first_prev+6(2) = '01'.
+  lv_first_prev = lv_first_prev - 1.
+
+  lv_last_prev  = lv_first_prev.
+  lv_first_prev+6(2) = '01'.
+
+  " Prepare default selection dates
+  po_date-low  = lv_first_prev.
+  po_date-high = lv_last_prev.
+  APPEND po_date.
+
+START-OF-SELECTION.
+
+PERFORM get_data.
+  " Display ALV grid with header data
+PERFORM display_data.
 
 "-------------------------------------------------------------
 " Form GET_DATA: Fetch vendor or PO data
 "-------------------------------------------------------------
-FORM GET_DATA.
+FORM get_data.
 
-  " Check input validation
+* Validate input: at least Vendor or PO number must be entered
   IF vendor IS INITIAL AND po_num IS INITIAL.
     MESSAGE 'Please enter at least Vendor or PO Number' TYPE 'E'.
   ENDIF.
 
-  IF vendor IS NOT INITIAL AND po_num IS NOT INITIAL.
-    MESSAGE 'Please enter only one field at a time' TYPE 'E'.
-  ENDIF.
+  DESCRIBE TABLE vendor  LINES DATA(lv_vendor_lines).
+  DESCRIBE TABLE po_num  LINES DATA(lv_po_lines).
+  DESCRIBE TABLE po_date LINES DATA(lv_po_date_lines).
 
-  " Fetch data by vendor
-  IF vendor IS NOT INITIAL.
-    SELECT ekko~ebeln,
-           ekko~lifnr,
-           lfa1~name1
-      FROM ekko
-      INNER JOIN lfa1 ON ekko~lifnr = lfa1~lifnr
-      INTO TABLE @lt_header
-      WHERE ekko~lifnr IN @vendor.
-  ENDIF.
+  " Main SELECT statement: fetch header info and aggregation
+  SELECT ekko~ebeln,
+         ekko~lifnr,
+         lfa1~name1,
+         COUNT( ekpo~ebelp ) AS po_items_count,
+         SUM( ekpo~menge )   AS total_items_qty
+        ,ZGG_SELECTED_PO~PO_COMMENT as comment
+    FROM ekko
+    INNER JOIN lfa1 ON ekko~lifnr = lfa1~lifnr
+    INNER JOIN ekpo ON ekko~ebeln = ekpo~ebeln
+    left join ZGG_SELECTED_PO on ekko~ebeln = ZGG_SELECTED_PO~PO_NUMBER
+    WHERE ( ( @lv_vendor_lines  = 0 OR ekko~lifnr IN @vendor )
+        AND ( @lv_po_lines      = 0 OR ekko~ebeln IN @po_num )
+        AND ( @lv_po_date_lines = 0 OR ekko~bedat BETWEEN @po_date-low AND @po_date-high ) )
+    GROUP BY ekko~ebeln,
+             ekko~lifnr,
+             lfa1~name1
+            ,ZGG_SELECTED_PO~PO_COMMENT
+    INTO CORRESPONDING FIELDS OF TABLE @lt_header.
 
-  " Fetch data by PO number
-  IF po_num IS NOT INITIAL.
-    SELECT ekko~ebeln,
-           ekko~lifnr,
-           lfa1~name1
-      FROM ekko
-      INNER JOIN lfa1 ON ekko~lifnr = lfa1~lifnr
-      INTO TABLE @lt_header
-      WHERE ekko~ebeln IN @po_num.
-  ENDIF.
+  " Call form to apply conditional coloring to quantity column
+  PERFORM colorize_quantity.
+
+ENDFORM.
+
+"-------------------------------------------------------------
+" Form COLORIZE_QUANTITY: Apply color based on quantity
+"-------------------------------------------------------------
+FORM colorize_quantity.
+
+  LOOP AT lt_header INTO DATA(ls_row).
+
+    CLEAR ls_row-color_tab.
+    CLEAR ls_color.
+
+    ls_color-fieldname = 'TOTAL_ITEMS_QTY'.
+
+    " Set color based on quantity ranges
+    IF ls_row-total_items_qty BETWEEN 0 AND 1000.
+      ls_color-color-col = 6. " Red
+    ELSEIF ls_row-total_items_qty BETWEEN 1001 AND 10000.
+      ls_color-color-col = 3. " Yellow
+    ELSE.
+      ls_color-color-col = 5. " Green
+    ENDIF.
+
+    " Ensure color is applied to background and text
+    ls_color-color-int = 1.
+    ls_color-color-inv = 1.
+
+    " Append color info to row
+    APPEND ls_color TO ls_row-color_tab.
+
+    " Update row in main table
+    MODIFY lt_header FROM ls_row.
+
+  ENDLOOP.
 
 ENDFORM.
 
 "-------------------------------------------------------------
 " Form TOP_OF_PAGE: Header and commentary
 "-------------------------------------------------------------
-FORM TOP_OF_PAGE .
+FORM top_of_page.
 
-   CLEAR lt_comment.
+  CLEAR lt_comment.
 
-  " Display ALV commentary header
+  " Add main header
   CLEAR ls_comment.
-  ls_comment-typ  = 'H'.                " Header line
-  ls_comment-info = 'ZGG_ALV_VIEWER'.   " Report title
+  ls_comment-typ  = 'H'.
+  ls_comment-info = 'ZGG_ALV_VIEWER'.
   APPEND ls_comment TO lt_comment.
 
+  " Add sub-header or description
   CLEAR ls_comment.
-  ls_comment-typ  = 'S'.                " Subheader
+  ls_comment-typ  = 'S'.
   ls_comment-info = 'Display ALV grid showing count of purchasing'.
   APPEND ls_comment TO lt_comment.
 
-  " Write commentary to ALV
+  " Call standard function to display commentary on ALV top
   CALL FUNCTION 'REUSE_ALV_COMMENTARY_WRITE'
     EXPORTING
       i_logo             = 'ENJOYSAP_LOGO'
@@ -72,16 +127,42 @@ FORM TOP_OF_PAGE .
 
 ENDFORM.
 
+"-------------------------------------------------------------
+" Form USER_COMMAND: Handle user actions (hotspot, save)
+"-------------------------------------------------------------
+FORM user_command USING r_ucomm     LIKE sy-ucomm
+                        rs_selfield TYPE slis_selfield.
+
+  CASE r_ucomm.
+
+    WHEN '&IC1'. " Hotspot click
+      IF rs_selfield-fieldname = 'EBELN'.
+        READ TABLE lt_header
+          INDEX rs_selfield-tabindex
+          INTO DATA(ls_row).
+        " Fetch item details for selected PO
+        PERFORM get_item_data USING ls_row-ebeln.
+        " Display item ALV
+        PERFORM display_item_data.
+      ENDIF.
+
+    WHEN '&DATA_SAVE'. " Save selected rows
+      PERFORM save_selected_rows.
+
+  ENDCASE.
+
+ENDFORM.
 
 "-------------------------------------------------------------
 " Form DISPLAY_DATA: Display ALV grid
 "-------------------------------------------------------------
-FORM DISPLAY_DATA.
+FORM display_data.
 
-  " Build field catalog
+  " Define field catalog for header ALV
   CLEAR wa_fieldcat.
   wa_fieldcat-fieldname = 'EBELN'.
   wa_fieldcat-seltext_m = 'PO Number'.
+  wa_fieldcat-hotspot  = 'X'. " Make PO clickable
   APPEND wa_fieldcat TO it_fieldcat.
 
   CLEAR wa_fieldcat.
@@ -95,41 +176,164 @@ FORM DISPLAY_DATA.
   APPEND wa_fieldcat TO it_fieldcat.
 
   CLEAR wa_fieldcat.
-  wa_fieldcat-fieldname = 'PO_COUNT'.
+  wa_fieldcat-fieldname = 'PO_ITEMS_COUNT'.
   wa_fieldcat-seltext_m = 'Item Count'.
   APPEND wa_fieldcat TO it_fieldcat.
 
   CLEAR wa_fieldcat.
-  wa_fieldcat-fieldname = 'TOTAL_QTY'.
+  wa_fieldcat-fieldname = 'TOTAL_ITEMS_QTY'.
   wa_fieldcat-seltext_m = 'Total Quantity'.
-  wa_fieldcat-do_sum = 'X'.              " Sum column
+  wa_fieldcat-do_sum   = 'X'. " Enable total sum in ALV footer
   APPEND wa_fieldcat TO it_fieldcat.
 
-  " Add editable checkbox column for selection
   CLEAR wa_fieldcat.
   wa_fieldcat-fieldname = 'CHKBOX'.
   wa_fieldcat-seltext_m = 'Select'.
   wa_fieldcat-checkbox = 'X'.
-  wa_fieldcat-edit = 'X'.               " Allow editing
+  wa_fieldcat-edit     = 'X'. " Editable checkbox
   APPEND wa_fieldcat TO it_fieldcat.
 
-  " Display ALV grid with toolbar and user command
+  CLEAR wa_fieldcat.
+  wa_fieldcat-fieldname = 'COMMENT'.
+  wa_fieldcat-seltext_m = 'Comment'.
+  wa_fieldcat-edit     = 'X'. " Editable comment
+  APPEND wa_fieldcat TO it_fieldcat.
+
+  " Call ALV function to display header data
   CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
     EXPORTING
-      i_callback_program      = sy-repid
-      it_fieldcat             = it_fieldcat
-      i_callback_top_of_page  = 'TOP_OF_PAGE'
-
-
-*     i_callback_pf_status_set = 'PF_STATUS'  " Uncomment if using custom GUI status
+      i_callback_program       = sy-repid
+      it_fieldcat              = it_fieldcat
+      is_layout               = ls_layout
+      i_callback_top_of_page   = 'TOP_OF_PAGE'
+      i_callback_user_command  = 'USER_COMMAND'
     TABLES
-      t_outtab = lt_header
+      t_outtab                 = lt_header
     EXCEPTIONS
-      program_error = 1
-      OTHERS        = 2.
+      program_error            = 1
+      OTHERS                   = 2.
 
   IF sy-subrc <> 0.
     MESSAGE 'There is an error displaying ALV' TYPE 'I'.
   ENDIF.
+
+ENDFORM.
+
+"-------------------------------------------------------------
+" Form GET_ITEM_DATA: Fetch item details for a specific PO
+"-------------------------------------------------------------
+FORM get_item_data USING p_ls_row_ebeln.
+
+  SELECT ekpo~ebeln,
+         ekpo~ebelp,
+         ekpo~matnr,
+         makt~maktx,
+         ekpo~menge
+    FROM ekpo
+    LEFT JOIN makt
+      ON makt~matnr = ekpo~matnr
+     AND makt~spras = 'E'
+    WHERE ekpo~ebeln = @p_ls_row_ebeln
+    INTO TABLE @lt_po_items.
+
+ENDFORM.
+
+"-------------------------------------------------------------
+" Form DISPLAY_ITEM_DATA: Display item ALV
+"-------------------------------------------------------------
+FORM display_item_data.
+
+  " Build field catalog for item ALV
+  CLEAR wa_items_fieldcat.
+  wa_items_fieldcat-fieldname = 'EBELN'.
+  wa_items_fieldcat-seltext_m = 'PO Number'.
+  APPEND wa_items_fieldcat TO it_items_fieldcat.
+
+  CLEAR wa_items_fieldcat.
+  wa_items_fieldcat-fieldname = 'EBELP'.
+  wa_items_fieldcat-seltext_m = 'Item Number'.
+  APPEND wa_items_fieldcat TO it_items_fieldcat.
+
+  CLEAR wa_items_fieldcat.
+  wa_items_fieldcat-fieldname = 'MATNR'.
+  wa_items_fieldcat-seltext_m = 'Material No.'.
+  APPEND wa_items_fieldcat TO it_items_fieldcat.
+
+  CLEAR wa_items_fieldcat.
+  wa_items_fieldcat-fieldname = 'MAKTX'.
+  wa_items_fieldcat-seltext_m = 'Material Description'.
+  APPEND wa_items_fieldcat TO it_items_fieldcat.
+
+  CLEAR wa_items_fieldcat.
+  wa_items_fieldcat-fieldname = 'MENGE'.
+  wa_items_fieldcat-seltext_m = 'Quantity'.
+  APPEND wa_items_fieldcat TO it_items_fieldcat.
+
+  " Display item ALV
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+    EXPORTING
+      i_callback_program = sy-repid
+      it_fieldcat        = it_items_fieldcat
+    TABLES
+      t_outtab           = lt_po_items
+    EXCEPTIONS
+      program_error      = 1
+      OTHERS             = 2.
+
+  IF sy-subrc <> 0.
+    MESSAGE 'There is an error displaying ALV' TYPE 'I'.
+  ENDIF.
+
+ENDFORM.
+
+"-------------------------------------------------------------
+" Form SAVE_SELECTED_ROWS: Save selected rows into custom table
+"-------------------------------------------------------------
+FORM save_selected_rows.
+
+  " Check if any rows selected
+  DATA(lv_selected) = 0.
+
+  LOOP AT lt_header INTO DATA(ls_row) WHERE chkbox = 'X'.
+    lv_selected = 1.
+
+    " Prepare data to save
+    DATA(ls_log) = VALUE zgg_selected_po(
+      mandt       = sy-mandt
+      po_number   = ls_row-ebeln
+      vendor      = ls_row-lifnr
+      po_count    = ls_row-po_items_count
+      total_qty   = ls_row-total_items_qty
+      unit        = 'EA'
+      saved_date  = sy-datum
+      saved_time  = sy-uzeit
+      saved_user  = sy-uname
+      po_comment  = ls_row-comment
+    ).
+
+    " Try to insert or update the table
+    MODIFY zgg_selected_po FROM ls_log.
+    CASE sy-subrc.
+      WHEN 0.
+        " Successfully inserted/updated
+      WHEN 4.
+        " Entry already exists
+        MESSAGE |PO { ls_row-ebeln } already exists in ZGG_SELECTED_PO| TYPE 'I'.
+        RETURN.
+      WHEN OTHERS.
+        " Any other error
+        MESSAGE |Error saving PO { ls_row-ebeln }| TYPE 'E'.
+    ENDCASE.
+
+  ENDLOOP.
+
+  IF lv_selected = 0.
+    MESSAGE 'No rows selected. Please select at least one row.' TYPE 'E'.
+    RETURN.
+  ENDIF.
+
+  " Commit changes to database
+  COMMIT WORK AND WAIT.
+  MESSAGE 'Selected rows saved successfully in ZGG_SELECTED_PO Table' TYPE 'S'.
 
 ENDFORM.

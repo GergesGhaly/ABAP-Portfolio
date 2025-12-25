@@ -63,6 +63,14 @@ export default function FileViewer() {
         style={vs}
         showLineNumbers
         wrapLongLines
+       
+       
+        codeTagProps={{
+          style: {
+          lineHeight: "1.5",
+          },
+        }}
+
       >
         {file.content}
       </SyntaxHighlighter>

@@ -1,7 +1,6 @@
 REPORT zgg_alv_viewer.
-
-" Include ALV definitions
 INCLUDE zgg_alv_viewer_def.
+INCLUDE zgg_alv_viewer_f01. " Include ALVs fieldcat
 
 INITIALIZATION.
   DATA: lv_first_prev TYPE sy-datum,
@@ -20,17 +19,15 @@ INITIALIZATION.
   po_date-high = lv_last_prev.
   APPEND po_date.
 
-START-OF-SELECTION.
 
+START-OF-SELECTION.
 PERFORM get_data.
-  " Display ALV grid with header data
 PERFORM display_data.
 
 "-------------------------------------------------------------
 " Form GET_DATA: Fetch vendor or PO data
 "-------------------------------------------------------------
 FORM get_data.
-
 * Validate input: at least Vendor or PO number must be entered
   IF vendor IS INITIAL AND po_num IS INITIAL.
     MESSAGE 'Please enter at least Vendor or PO Number' TYPE 'E'.
@@ -153,51 +150,15 @@ FORM user_command USING r_ucomm     LIKE sy-ucomm
 
 ENDFORM.
 
+
+
 "-------------------------------------------------------------
 " Form DISPLAY_DATA: Display ALV grid
 "-------------------------------------------------------------
 FORM display_data.
-
-  " Define field catalog for header ALV
-  CLEAR wa_fieldcat.
-  wa_fieldcat-fieldname = 'EBELN'.
-  wa_fieldcat-seltext_m = 'PO Number'.
-  wa_fieldcat-hotspot  = 'X'. " Make PO clickable
-  APPEND wa_fieldcat TO it_fieldcat.
-
-  CLEAR wa_fieldcat.
-  wa_fieldcat-fieldname = 'LIFNR'.
-  wa_fieldcat-seltext_m = 'Vendor Number'.
-  APPEND wa_fieldcat TO it_fieldcat.
-
-  CLEAR wa_fieldcat.
-  wa_fieldcat-fieldname = 'NAME1'.
-  wa_fieldcat-seltext_m = 'Vendor Name'.
-  APPEND wa_fieldcat TO it_fieldcat.
-
-  CLEAR wa_fieldcat.
-  wa_fieldcat-fieldname = 'PO_ITEMS_COUNT'.
-  wa_fieldcat-seltext_m = 'Item Count'.
-  APPEND wa_fieldcat TO it_fieldcat.
-
-  CLEAR wa_fieldcat.
-  wa_fieldcat-fieldname = 'TOTAL_ITEMS_QTY'.
-  wa_fieldcat-seltext_m = 'Total Quantity'.
-  wa_fieldcat-do_sum   = 'X'. " Enable total sum in ALV footer
-  APPEND wa_fieldcat TO it_fieldcat.
-
-  CLEAR wa_fieldcat.
-  wa_fieldcat-fieldname = 'CHKBOX'.
-  wa_fieldcat-seltext_m = 'Select'.
-  wa_fieldcat-checkbox = 'X'.
-  wa_fieldcat-edit     = 'X'. " Editable checkbox
-  APPEND wa_fieldcat TO it_fieldcat.
-
-  CLEAR wa_fieldcat.
-  wa_fieldcat-fieldname = 'COMMENT'.
-  wa_fieldcat-seltext_m = 'Comment'.
-  wa_fieldcat-edit     = 'X'. " Editable comment
-  APPEND wa_fieldcat TO it_fieldcat.
+*
+*  " Define field catalog for header ALV
+  PERFORM DEF_FIELDCAT.
 
   " Call ALV function to display header data
   CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
@@ -238,36 +199,16 @@ FORM get_item_data USING p_ls_row_ebeln.
 
 ENDFORM.
 
+
+
 "-------------------------------------------------------------
 " Form DISPLAY_ITEM_DATA: Display item ALV
 "-------------------------------------------------------------
 FORM display_item_data.
+*
+*   Build field catalog for item ALV
+  PERFORM DEF_ITEM_FIELDCAT.
 
-  " Build field catalog for item ALV
-  CLEAR wa_items_fieldcat.
-  wa_items_fieldcat-fieldname = 'EBELN'.
-  wa_items_fieldcat-seltext_m = 'PO Number'.
-  APPEND wa_items_fieldcat TO it_items_fieldcat.
-
-  CLEAR wa_items_fieldcat.
-  wa_items_fieldcat-fieldname = 'EBELP'.
-  wa_items_fieldcat-seltext_m = 'Item Number'.
-  APPEND wa_items_fieldcat TO it_items_fieldcat.
-
-  CLEAR wa_items_fieldcat.
-  wa_items_fieldcat-fieldname = 'MATNR'.
-  wa_items_fieldcat-seltext_m = 'Material No.'.
-  APPEND wa_items_fieldcat TO it_items_fieldcat.
-
-  CLEAR wa_items_fieldcat.
-  wa_items_fieldcat-fieldname = 'MAKTX'.
-  wa_items_fieldcat-seltext_m = 'Material Description'.
-  APPEND wa_items_fieldcat TO it_items_fieldcat.
-
-  CLEAR wa_items_fieldcat.
-  wa_items_fieldcat-fieldname = 'MENGE'.
-  wa_items_fieldcat-seltext_m = 'Quantity'.
-  APPEND wa_items_fieldcat TO it_items_fieldcat.
 
   " Display item ALV
   CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'

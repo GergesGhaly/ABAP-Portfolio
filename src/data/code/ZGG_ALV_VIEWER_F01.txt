@@ -1,0 +1,79 @@
+*&---------------------------------------------------------------------*
+*& Include          ZGG_ALV_VIEWER_F01
+*&---------------------------------------------------------------------*
+
+" Define field catalog for header ALV
+FORM DEF_FIELDCAT.
+
+  CLEAR wa_fieldcat.
+  wa_fieldcat-fieldname = 'EBELN'.
+  wa_fieldcat-seltext_m = 'PO Number'.
+  wa_fieldcat-hotspot  = 'X'. " Make PO clickable
+  APPEND wa_fieldcat TO it_fieldcat.
+
+  CLEAR wa_fieldcat.
+  wa_fieldcat-fieldname = 'LIFNR'.
+  wa_fieldcat-seltext_m = 'Vendor Number'.
+  APPEND wa_fieldcat TO it_fieldcat.
+
+  CLEAR wa_fieldcat.
+  wa_fieldcat-fieldname = 'NAME1'.
+  wa_fieldcat-seltext_m = 'Vendor Name'.
+  APPEND wa_fieldcat TO it_fieldcat.
+
+  CLEAR wa_fieldcat.
+  wa_fieldcat-fieldname = 'PO_ITEMS_COUNT'.
+  wa_fieldcat-seltext_m = 'Item Count'.
+  APPEND wa_fieldcat TO it_fieldcat.
+
+  CLEAR wa_fieldcat.
+  wa_fieldcat-fieldname = 'TOTAL_ITEMS_QTY'.
+  wa_fieldcat-seltext_m = 'Total Quantity'.
+  wa_fieldcat-do_sum   = 'X'. " Enable total sum in ALV footer
+  APPEND wa_fieldcat TO it_fieldcat.
+
+  CLEAR wa_fieldcat.
+  wa_fieldcat-fieldname = 'CHKBOX'.
+  wa_fieldcat-seltext_m = 'Select'.
+  wa_fieldcat-checkbox = 'X'.
+  wa_fieldcat-edit     = 'X'. " Editable checkbox
+  APPEND wa_fieldcat TO it_fieldcat.
+
+  CLEAR wa_fieldcat.
+  wa_fieldcat-fieldname = 'COMMENT'.
+  wa_fieldcat-seltext_m = 'Comment'.
+  wa_fieldcat-edit     = 'X'. " Editable comment
+  APPEND wa_fieldcat TO it_fieldcat.
+
+  ENDFORM.
+
+
+
+  " Build field catalog for item ALV
+FORM DEF_ITEM_FIELDCAT.
+
+  CLEAR wa_items_fieldcat.
+  wa_items_fieldcat-fieldname = 'EBELN'.
+  wa_items_fieldcat-seltext_m = 'PO Number'.
+  APPEND wa_items_fieldcat TO it_items_fieldcat.
+
+  CLEAR wa_items_fieldcat.
+  wa_items_fieldcat-fieldname = 'EBELP'.
+  wa_items_fieldcat-seltext_m = 'Item Number'.
+  APPEND wa_items_fieldcat TO it_items_fieldcat.
+
+  CLEAR wa_items_fieldcat.
+  wa_items_fieldcat-fieldname = 'MATNR'.
+  wa_items_fieldcat-seltext_m = 'Material No.'.
+  APPEND wa_items_fieldcat TO it_items_fieldcat.
+
+  CLEAR wa_items_fieldcat.
+  wa_items_fieldcat-fieldname = 'MAKTX'.
+  wa_items_fieldcat-seltext_m = 'Material Description'.
+  APPEND wa_items_fieldcat TO it_items_fieldcat.
+
+  CLEAR wa_items_fieldcat.
+  wa_items_fieldcat-fieldname = 'MENGE'.
+  wa_items_fieldcat-seltext_m = 'Quantity'.
+  APPEND wa_items_fieldcat TO it_items_fieldcat.
+  ENDFORM.

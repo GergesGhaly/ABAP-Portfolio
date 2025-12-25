@@ -1,16 +1,15 @@
 *&---------------------------------------------------------------------*
 *& Include          ZGG_ALV_VIEWER_DEF
 *&---------------------------------------------------------------------*
-TABLES: LFA1, EKKO, EKPO. " Declare SAP tables used
-
-TYPE-POOLS: slis. " Include SLIS type pool for ALV functions
+TABLES: LFA1, EKKO, EKPO.
+TYPE-POOLS: slis.
 
 "------------------------------
 " Select options for user input
 "------------------------------
-SELECT-OPTIONS: Vendor     FOR LFA1-LIFNR,  " Vendor selection
-                PO_Num FOR EKKO-EBELN,   " Purchase Order selection
-                Po_date  FOR sy-datum.   " Date selection
+SELECT-OPTIONS: Vendor FOR LFA1-LIFNR,
+                PO_Num FOR EKKO-EBELN,
+                Po_date FOR sy-datum.   " Date selection
 
 "------------------------------
 " Header structure definition

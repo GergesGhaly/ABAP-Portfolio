@@ -2,8 +2,8 @@ import { useState } from "react";
 import { AiOutlineFacebook } from "react-icons/ai";
 import { CiLinkedin } from "react-icons/ci";
 import { FaGithub } from "react-icons/fa";
-
-
+import SES from "../data/cert/SES.PNG";
+import sql from "../data/cert/sql.png";
 
 // Add CV pdf file in public folder
 
@@ -13,10 +13,9 @@ import { FaGithub } from "react-icons/fa";
 
 // Create Text Files for Your Code
 // - Put each code file as a .txt file inside the code folder data => code
-// - Go to: data/projects.jsx 
+// - Go to: data/projects.jsx
 // Add a New Object to projectsList Array
 // Follow the existing structure
-
 
 const iconStyle = { color: "#354a5f", fontSize: "18px" };
 
@@ -43,27 +42,26 @@ export const links = [
   // },
 ];
 
-
 export const certificatsData = [
-    {
-      id: 1,
-      title: "Basic Programming",
-      description: "Certification for Java fundamentals",
-      date: "2025-11-19",
-      img: "https://i.etsystatic.com/11323145/r/il/7f7042/1489349106/il_fullxfull.1489349106_o3z1.jpg",
-    },
-    {
-      id: 2,
-      title: "ABAP Fundamentals",
-      description: "Certification for advanced concepts",
-      date: "2025-10-05",
-      img: "https://m.media-amazon.com/images/I/71tiay51vhL._AC_UF894,1000_QL80_.jpg",
-    },
-    // {
-    //   id: 3,
-    //   title: " ",
-    //   description: "   ",
-    //   date: "2025-10-05",
-    //   img: "",
-    // },
-  ];
+  {
+    id: 1,
+    title: "SES Training Center",
+    description: "Certification for Java fundamentals",
+    date: "December 2025",
+    img: SES,
+  },
+  {
+    id: 2,
+    title: "SQL Basics",
+    description: "Certification for SQL fundamentals",
+    date: "april 2025",
+    img: sql,
+  },
+  // {
+  //   id: 3,
+  //   title: " ",
+  //   description: "   ",
+  //   date: "2025-10-05",
+  //   img: "",
+  // },
+];

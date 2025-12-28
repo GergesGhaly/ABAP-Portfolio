@@ -46,13 +46,13 @@ export const certificatsData = [
   {
     id: 1,
     title: "SES Training Center",
-    description: "Certification for Java fundamentals",
+    description: "ABAP (Advanced Business Application Programming)",
     date: "December 2025",
     img: SES,
   },
   {
     id: 2,
-    title: "SQL Basics",
+    title: "Hackerrank",
     description: "Certification for SQL fundamentals",
     date: "april 2025",
     img: sql,
